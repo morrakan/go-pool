@@ -55,6 +55,8 @@ func (p *StaticPool) Free() uint {
 
 func (p *StaticPool) Get(timeout time.Duration) (interface{}, error) {
 	var d interface{}
+	idleDelay := time.NewTimer(timeout)
+	defer idleDelay.Stop()
 	select {
 	case d = <-p.pool:
 		if d == nil && p.newFunc != nil {
@@ -65,7 +67,7 @@ func (p *StaticPool) Get(timeout time.Duration) (interface{}, error) {
 			}
 		}
 		return d, nil
-	case <-time.After(timeout):
+	case <-idleDelay.C:
 		return nil, ErrTimeout
 	}
 }
