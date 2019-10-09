@@ -94,10 +94,12 @@ func (p *DynamicPool) get(timeout time.Duration) (interface{}, error) {
 
 	// No item is free and the pool is at max size, so wait for an item
 	// to become free.
+	idleDelay := time.NewTimer(timeout)
+	defer idleDelay.Stop()
 	select {
 	case v := <-p.pool:
 		return v, nil
-	case <-time.After(timeout):
+	case <-idleDelay.C:
 	}
 	return nil, ErrTimeout
 }
